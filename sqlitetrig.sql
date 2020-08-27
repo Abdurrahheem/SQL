@@ -1,0 +1,42 @@
+PRAGMA FOREIGN_KEYS = ON;
+
+DROP TABLE users;
+CREATE TABLE IF NOT EXISTS users(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username VARCHAR(255) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  created_at DATETIME NOT NULL,
+  update_at DATETIME NOT NULL
+);
+DROP TABLE profiles;
+CREATE TABLE IF NOT EXISTS profiles(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  name VARCHAR(255),
+  last_name VARCHAR(255),
+  photo_path VARCHAR(255),
+  about TEXT,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+DROP TRIGGER IF EXISTS new_profile;
+CREATE TRIGGER new_profile AFTER INSERT ON users
+  FOR EACH ROW
+  BEGIN
+    INSERT INTO profiles(user_id) VALUES (NEW.id);
+  END;
+
+DROP TRIGGER IF EXISTS update_user;
+CREATE TRIGGER update_user AFTER UPDATE ON profiles
+  FOR EACH ROW
+  BEGIN
+    UPDATE users SET  update_at = datetime('NOW') WHERE id = OLD.user_id;
+  END;
+
+DROP TRIGGER IF EXISTS delete_profile;
+CREATE TRIGGER delete_profile BEFORE DELETE ON users
+  FOR EACH ROW
+  BEGIN
+    DELETE FROM profiles WHERE user_id = OLD.id;
+  END;
